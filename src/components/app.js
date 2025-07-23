@@ -1,35 +1,70 @@
 "use client";
-
 import { useEffect, useState } from "react";
+import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
+import { useSeerbitPayment } from "seerbit-reactjs";
 import {
   setCart,
   addToCart,
   increaseQuantity,
   decreaseQuantity,
   removeFromCart,
+  resetCart
 } from "../hooks/cartslice";
 import Image from "next/image";
 import Jerseys from "./jersey";
 
+// const baseURL = "https://pay.seerbitapi.com/77398444";
+
 export default function App() {
   const [itemNo, setItemNo] = useState(0);
+  const [isLoading, setIsLoading] = useState(false)
   const dispatch = useDispatch();
   const cartItems = useSelector((state) => state.cart.items);
   const [showCart, setShowCart] = useState(false);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("cartData");
-    if (saved) {
-      const { cart, timestamp } = JSON.parse(saved);
-      const now = Date.now();
-      if (now - timestamp < 15 * 60 * 1000) {
-        dispatch(setCart(cart));
-      } else {
-        localStorage.removeItem("cartData");
-      }
-    }
-  }, [dispatch]);
+  const options = {
+    public_key: "SBTESTPUBK_ADBheZyCqBXYhFqJdNDVRv9bwRsPHhQh",
+    amount: `${
+      cartItems
+        .reduce((total, item) => total + item.quantity * item.price * 1500, 0)
+        .toFixed(2)
+    }`,
+    tranref: new Date().getTime(),
+    currency: "NGN",
+    email: "test@mail.com",
+    full_name: "Sam Smith",
+    mobile_no: "081234566789",
+    description: "test",
+    tokenize: false,
+    planId: "",
+    pocketId: "",
+    vendorId: "",
+    customization: {
+      theme: {
+        border_color: "#000000",
+        background_color: "#004C64",
+        button_color: "#0084A0",
+      },
+      payment_method: ["card", "account", "transfer", "wallet", "ussd"],
+      display_fee: false, // true
+      display_type: "embed", //inline
+      logo: "logo_url | base64",
+    },
+  };
+
+  const close = (close) => {
+    console.log(close);
+    dispatch(resetCart());
+  };
+
+  const callback = (response) => {
+    console.log(response);
+    setTimeout(() => closeCheckout(), 2000);
+  };
+
+  const seerbitPay = useSeerbitPayment(options, callback, close);
+
 
   useEffect(() => {
     const now = Date.now();
@@ -228,8 +263,11 @@ export default function App() {
                     )
                     .toFixed(2)}
                 </p>
-                <button className="mt-2 w-full bg-gray-600 hover:scale-105 cursor-pointer delay-100 text-white font-semibold py-2 rounded">
-                  Checkout
+                <button
+                  className="mt-2 w-full bg-gray-600 hover:scale-105 cursor-pointer delay-100 text-white font-semibold py-2 rounded"
+                  onClick={seerbitPay}
+                >
+                  {isLoading ?(<div className="animate-bounce opacity-10 cursor-none">Proceed To Checkout</div>): (<div>Proceed To Checkout</div>)}
                 </button>
               </div>
             )}
