@@ -21,20 +21,20 @@ const cartSlice = createSlice({
       }
     },
     increaseQuantity: (state, action) => {
-      const item = state.items.find((i) => i.name === action.payload);
+      const item = state.items.find((i) => i.name === action.payload.name);
       if (item) item.quantity += 1;
     },
     decreaseQuantity: (state, action) => {
-      const item = state.items.find((i) => i.name === action.payload);
+      const item = state.items.find((i) => i.name === action.payload.name);
       if (item) {
         item.quantity -= 1;
         if (item.quantity <= 0) {
-          state.items = state.items.filter((i) => i.name !== action.payload);
+          state.items = state.items.filter((i) => i.name !== action.payload.name);
         }
       }
     },
     removeFromCart: (state, action) => {
-      state.items = state.items.filter((i) => i.name !== action.payload);
+      state.items = state.items.filter((i) => i.name !== action.payload.name);
     },
     resetCart: (state) => {
       return initialState;
